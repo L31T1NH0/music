@@ -1,0 +1,6 @@
+/bin/
+/music
+/music-go
+/coverage.out
+*.prof
+*.test

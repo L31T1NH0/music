@@ -1,0 +1,159 @@
+# music
+
+Player de música para terminal com busca no YouTube, SoundCloud e biblioteca
+local. A interface é construída com Bubble Tea e a reprodução é delegada ao
+`mpv`.
+
+## Requisitos
+
+- Go 1.25 ou mais recente, apenas para compilar;
+- `mpv`, para reprodução;
+- `yt-dlp`, para buscas remotas e downloads;
+- FFmpeg, usado pelo `yt-dlp` ao converter downloads para MP3;
+- Linux ou outro sistema Unix com sockets Unix e grupos de processos.
+
+No Arch Linux:
+
+```sh
+sudo pacman -S go mpv yt-dlp ffmpeg
+```
+
+No Linux Mint/Ubuntu:
+
+```sh
+sudo apt-get install mpv ffmpeg
+```
+
+Instale também Go 1.25 ou mais recente e `yt-dlp`. O Go disponível nos
+repositórios de versões antigas do sistema pode ser anterior ao exigido pelo
+projeto. Confirme com `go version` e `yt-dlp --version`.
+
+## Compilar e testar
+
+```sh
+make test
+make build
+./bin/music
+```
+
+Para disponibilizar o comando `music` no seu usuário:
+
+```sh
+make install
+music
+```
+
+O destino padrão é `~/.local/bin`, que deve estar no `PATH`. Use
+`make uninstall` para remover o comando; as músicas e a configuração são
+preservadas. Para outro destino, use `make install PREFIX=/caminho`.
+
+Também é possível iniciar uma busca diretamente:
+
+```sh
+./bin/music daft punk get lucky
+```
+
+Use `./bin/music --help` e `./bin/music --version` para informações rápidas.
+
+## Controles
+
+### Busca
+
+| Tecla/comando | Ação |
+| --- | --- |
+| `Tab` | alterna entre YouTube, SoundCloud e arquivos locais |
+| `Enter` | inicia a busca ou abre a seleção |
+| `↑` / `↓` | navega pelo histórico de buscas; no modo local, muda de página |
+| `historico` | mostra as faixas reproduzidas recentemente |
+| `fila` | resume a faixa atual e a fila |
+| `:pasta /caminho` | define a biblioteca local e o destino dos downloads |
+| `:buscar termo` | força uma busca; útil para termos numéricos no modo local |
+| `:formato mp3` | converte downloads para MP3 |
+| `:formato original` | preserva o melhor formato de áudio disponível |
+| `:downloads` | mostra progresso e estado das tarefas de download |
+| `:download cancelar` | cancela downloads ativos |
+| `q` ou `Ctrl+C` | sai |
+
+### Resultados
+
+| Entrada | Ação |
+| --- | --- |
+| `1` | toca uma faixa |
+| `1-5` ou `1,3,7` | adiciona várias faixas à fila |
+| `d3` | baixa a faixa 3 |
+| `↑` / `↓` | muda de página |
+| `Esc` | volta à busca |
+
+Pressionar `Enter` com a seleção vazia escolhe a primeira faixa da página
+visível.
+
+### Player e fila
+
+| Tecla/comando | Ação |
+| --- | --- |
+| `Space` | pausa ou retoma |
+| `←` / `→` | retrocede ou avança 10 segundos |
+| `↑` / `↓` | altera o volume |
+| `S` | liga ou desliga o reforço de graves |
+| `p` | volta à busca sem interromper o áudio |
+| `q` | pula para a próxima faixa ou para a reprodução |
+| `d` | baixa a faixa atual |
+| `x` | remove a próxima faixa |
+| `c` | limpa a fila |
+
+Na busca ou na seleção também estão disponíveis:
+
+```text
+:fila limpar
+:fila remover N
+:fila mover ORIGEM DESTINO
+```
+
+Buscas e carregamentos podem ser cancelados com `Esc`.
+
+O reforço de graves aplica +5 dB em torno de 110 Hz, com compensação e
+limitador para reduzir clipping. Ele continua ativo ao avançar para outra faixa
+na mesma sessão.
+
+## Arquivos do usuário
+
+O app respeita `XDG_CONFIG_HOME` e `XDG_DATA_HOME` quando definidos:
+
+- configuração: `$XDG_CONFIG_HOME/music/config.json`;
+- buscas recentes: `$XDG_DATA_HOME/music/search_history.json`;
+- reproduções recentes: `$XDG_DATA_HOME/music/play_history.json`.
+
+Na ausência das variáveis XDG, são usados `~/.config` e
+`~/.local/share`. Somente nesse modo padrão, históricos do caminho antigo
+`~/.local/share/ytmusic` continuam sendo lidos e são migrados na próxima
+gravação. Um `XDG_DATA_HOME` explícito permanece isolado.
+
+Os arquivos JSON são limitados, bloqueados entre processos e escritos de forma
+atômica. Cada instância cria um socket privado do `mpv` sob `/tmp`.
+
+## Qualidade
+
+```sh
+make fmt-check
+make vet
+make test
+make vuln
+```
+
+A suíte cobre parsing e fuzz cases conhecidos, caracteres de controle,
+persistência concorrente, busca local, cancelamento de subprocessos, ciclo do
+player, mensagens assíncronas, fila, paginação e terminais pequenos.
+
+## Solução de problemas
+
+- **`mpv não encontrado no PATH`**: instale o `mpv` e confirme com
+  `mpv --version`.
+- **Falha na busca/download**: execute `yt-dlp --version`; o app apresenta o
+  erro retornado pela ferramenta. Se uma busca retornar algumas faixas antes de
+  falhar, os resultados disponíveis são exibidos com um aviso.
+- **Download não converte para MP3**: confirme `ffmpeg -version`.
+- **Pasta local inválida**: use um caminho existente com
+  `:pasta ~/Music`.
+
+O projeto ainda não declara uma licença pública; isso precisa ser decidido pelo
+autor antes da redistribuição.
