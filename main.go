@@ -86,6 +86,8 @@ var (
 
 type Track struct {
 	Title    string
+	Artist   string `json:",omitempty"`
+	Cover    string `json:",omitempty"`
 	Channel  string
 	Duration string
 	URL      string
@@ -93,9 +95,10 @@ type Track struct {
 }
 
 type Config struct {
-	LocalDir       string `json:"local_dir"`
-	Volume         *int   `json:"volume,omitempty"`
-	DownloadFormat string `json:"download_format,omitempty"`
+	MusicSync      MusicSyncConfig `json:"music_sync,omitempty"`
+	LocalDir       string          `json:"local_dir"`
+	Volume         *int            `json:"volume,omitempty"`
+	DownloadFormat string          `json:"download_format,omitempty"`
 }
 
 type FolderItem struct {
@@ -183,6 +186,8 @@ type downloadState struct {
 // ── Model ─────────────────────────────────────────────────────────────────────
 
 type Model struct {
+	musicSync          MusicSyncConfig
+	music              musicState
 	state              appState
 	width              int
 	height             int
@@ -299,6 +304,7 @@ func newModel(initialQuery string) Model {
 	)
 
 	return Model{
+		musicSync:          cfg.MusicSync,
 		state:              stateSearch,
 		src:                sourceYT,
 		localDir:           localDir,
@@ -345,6 +351,14 @@ func (m *Model) shutdown() error {
 	if m.player != nil {
 		m.player.stopProcess(3 * time.Second)
 	}
+	if m.music.event.SessionID != "" {
+		m.music.event.Sequence++
+		m.music.event.Playing = false
+		m.music.event.ObservedAt = time.Now().UTC()
+		if err := sendMusicEvent(m.musicSync, m.music.event); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}
 	return saveConfig(m.config())
 }
 
@@ -355,6 +369,7 @@ func (m Model) config() Config {
 		localDir = m.localDir
 	}
 	return Config{
+		MusicSync:      m.musicSync,
 		LocalDir:       localDir,
 		Volume:         &volume,
 		DownloadFormat: m.downloadFormat,
@@ -364,10 +379,17 @@ func (m Model) config() Config {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 func main() {
+	if len(os.Args) == 3 && os.Args[1] == "--sync-setup" {
+		if err := configureMusicSync(os.Args[2]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if len(os.Args) == 2 {
 		switch os.Args[1] {
 		case "-h", "--help":
-			fmt.Println("uso: music [termos da busca]")
+			fmt.Println("uso: music [termos da busca] | music --sync-setup https://sua-api.vercel.app")
 			fmt.Println("abre a interface e inicia a busca quando termos são informados")
 			return
 		case "-v", "--version":

@@ -203,6 +203,8 @@ func inlineText(text string, width int, style lipgloss.Style) string {
 }
 
 func sanitizeTrack(track Track) Track {
+	track.Artist = oneLine(track.Artist)
+	track.Cover = strings.TrimSpace(strings.ToValidUTF8(track.Cover, ""))
 	track.Title = oneLine(track.Title)
 	track.Channel = oneLine(track.Channel)
 	track.Duration = oneLine(track.Duration)

@@ -157,3 +157,39 @@ player, mensagens assíncronas, fila, paginação e terminais pequenos.
 
 O projeto ainda não declara uma licença pública; isso precisa ser decidido pelo
 autor antes da redistribuição.
+
+## Sincronizar com domenyk.com/links
+
+```sh
+music --sync-setup https://domenyk-api.vercel.app
+```
+
+O comando salva um token aleatório na configuração local (`0600`) e imprime
+`MUSIC_DEVICE_TOKEN_SHA256` para cadastrar **no projeto da API** na Vercel.
+Repetir o comando mantém o token. Publique a API com a variável configurada e
+use esta versão atualizada do player. A integração é opcional: sem
+`music_sync` configurado, nenhum evento é enviado.
+
+A faixa é anunciada quando começa a tocar e atualizada a cada 15 segundos.
+Pausar, parar e encerrar o player atualizam o estado; um fechamento inesperado
+expira em 45 segundos. Cada reprodução com pelo menos 30 segundos efetivamente
+ouvidos entra no ranking pessoal; pausas e saltos não contam como escuta.
+Falhas de rede aparecem no status e não interrompem a música. O próximo envio
+leva o tempo acumulado da faixa atual; não há fila persistente para faixas
+encerradas offline. O histórico antigo não é importado como reproduções.
+
+Arquivos locais enviam somente título/metadados, sem o caminho da biblioteca.
+A API completa os dados que encontrar no catálogo. O visitante do site pode
+alternar entre sua faixa atual e até 15 outras mais ouvidas para ouvir prévias
+de até 30 segundos, sem controlar seu player nem alterar seu ranking.
+
+Para desligar o envio neste dispositivo, remova `music_sync` do arquivo
+`~/.config/music/config.json` (ou `$XDG_CONFIG_HOME/music/config.json`). Para
+revogar o acesso, remova ou substitua o hash na API e faça redeploy.
+
+Se a API estiver atrás da proteção de automação da Vercel, a configuração
+`music_sync.protection_bypass` guarda a credencial desse projeto e a envia
+somente no header `x-vercel-protection-bypass` para a origem configurada.
+Ela fica no mesmo arquivo local privado (`0600`); o setup preserva seu valor.
+Essa credencial libera a passagem pela Vercel, mas o token próprio da API
+continua obrigatório. Não copie essas credenciais para variáveis públicas.

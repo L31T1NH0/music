@@ -23,6 +23,9 @@ func loadConfig() (Config, error) {
 	if cfg.DownloadFormat != "" && cfg.DownloadFormat != "mp3" && cfg.DownloadFormat != "original" {
 		return Config{}, fmt.Errorf("formato de download deve ser mp3 ou original")
 	}
+	if err := validateMusicSync(cfg.MusicSync); err != nil {
+		return Config{}, err
+	}
 	return cfg, nil
 }
 

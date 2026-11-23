@@ -12,7 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width

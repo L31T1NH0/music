@@ -296,7 +296,17 @@ func searchYTDLP(ctx context.Context, query string, limit int, src source) ([]Tr
 		if seconds, ok := data["duration"].(float64); ok {
 			duration = fmtDuration(seconds)
 		}
+		artist, _ := data["artist"].(string)
+		cover, _ := data["thumbnail"].(string)
+		if cover == "" {
+			if thumbnails, ok := data["thumbnails"].([]any); ok && len(thumbnails) > 0 {
+				if thumbnail, ok := thumbnails[len(thumbnails)-1].(map[string]any); ok {
+					cover, _ = thumbnail["url"].(string)
+				}
+			}
+		}
 		tracks = append(tracks, sanitizeTrack(Track{
+			Artist: artist, Cover: cover,
 			Title:    title,
 			Channel:  channel,
 			Duration: duration,
