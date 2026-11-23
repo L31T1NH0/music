@@ -179,9 +179,9 @@ leva o tempo acumulado da faixa atual; não há fila persistente para faixas
 encerradas offline. O histórico antigo não é importado como reproduções.
 
 Arquivos locais enviam somente título/metadados, sem o caminho da biblioteca.
-A API completa os dados que encontrar no catálogo. O visitante do site pode
-alternar entre sua faixa atual e até 15 outras mais ouvidas para ouvir prévias
-de até 30 segundos, sem controlar seu player nem alterar seu ranking.
+A API completa os dados que encontrar no catálogo. O site mostra somente a faixa em reprodução, com capa, título, artista e
+um link para buscar o título no YouTube. Não há player de áudio nem lista
+de mais ouvidas no card; o histórico continua registrado pela API.
 
 Para desligar o envio neste dispositivo, remova `music_sync` do arquivo
 `~/.config/music/config.json` (ou `$XDG_CONFIG_HOME/music/config.json`). Para
